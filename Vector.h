@@ -17,15 +17,22 @@ template<typename DATA>
 class Vector
 {
     private:
+
+        // Main Container
         DATA* _array;
+
+        // Used to keep track of contents
         size_t _capacity;
         size_t _size;
 
+        // Called when expanding Vector
         void _resize();
 
     public:
         // Default Constructor
         Vector();
+
+        // Overloaded Constructor
         Vector(int);
 
         //Destructor
@@ -33,18 +40,23 @@ class Vector
         // Copy Constructor
         Vector(const Vector & objectToCopy);
         // Copy Assignment Operator
-        Vector& operator=(const Vector &objectToCopy);
+        void operator=(const Vector &objectToCopy);
+
     /*---------------------------------------------------------------------------------------------*/
-
+        // Mutators
         void push_back(DATA data);
-        void pop_back();
-        DATA front();
-        DATA back();
-        size_t size();
+        void insertAt(size_t index, DATA data);
         void clear();
+        void pop_back();
+
+        // Accessors
+        DATA const& front();
+        DATA const& back();
+        size_t const& size();
+        size_t const& capacity();
+
+        // Used for testing
         void displayVector();
-
-
 };
 
 #endif //DATASTRUCTURES_VECTOR_H

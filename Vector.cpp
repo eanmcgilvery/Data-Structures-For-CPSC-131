@@ -1,5 +1,6 @@
 // Implementation of the Vector Class
 
+#include <stdexcept>
 #include "Vector.h"
 
 /*====================================================================================================================*/
@@ -43,7 +44,7 @@ Vector<DATA>::~Vector()
 
 // Copy Assignment Operator
 template <typename DATA>
-Vector<DATA>& Vector<DATA>::operator=(const Vector<DATA>& objectToCopy)
+void Vector<DATA>::operator=(const Vector<DATA>& objectToCopy)
 {
     // Copy each member variable over into the new object that's being
     _capacity = objectToCopy._capacity;
@@ -54,6 +55,7 @@ Vector<DATA>& Vector<DATA>::operator=(const Vector<DATA>& objectToCopy)
     {
         _array[index] = objectToCopy._array[index];
     }
+
 
 }
 /*====================================================================================================================*/
@@ -76,9 +78,36 @@ void Vector<DATA>::push_back(DATA inputData)
     if(_size == _capacity)
         _resize();
 
+    // Add new element and, incriment our size variable
     _array[_size] = inputData;
     _size++;
 }
+
+// Inserts Element before the specified index
+template <typename DATA>
+void Vector<DATA>::insertAt(size_t index, DATA data)
+{
+    // Check to see if the index is valid
+    if(index < _capacity - 1 && index > 0)
+    {
+        // Resize the Vector if necessary
+        if(_size == _capacity)
+            _resize();
+
+        // Push the contents of the Vector back to make space
+        for(auto i = _size + 1; i > index; i--)
+            _array[i] = _array[i - 1];
+        
+        // Finally, insert the value at the desired index
+        _array[index] = data;
+    }
+    else
+        throw std::out_of_range("Not a valid Index to Insert.");
+    
+    // Update counter
+    _size++;
+}
+
 
 // Remove all elements from the Vector and reset everything to default values
 template<typename DATA>
@@ -92,10 +121,16 @@ void Vector<DATA>::pop_back()
 template<typename DATA>
 void Vector<DATA>::clear()
 {
-    // Free memory from array and reset capacity
+    // Create space on heap for _array to point to
      DATA* temp = new DATA[10];
+
+     // Free contents of old Vector
      delete []_array;
+
+     // Point our Array to the allocated space on the Heap
      _array = temp;
+
+     // Reset the counter variables
      _capacity = 10;
      _size = 0;
 }
@@ -112,24 +147,31 @@ void Vector<DATA>::clear()
 
 // Return the first element in the Vector
 template<typename DATA>
-DATA Vector<DATA>::front()
+DATA const& Vector<DATA>::front()
 {
     return _array[0];
 }
 
 // Return the last item in the Vector
 template<typename DATA>
-DATA Vector<DATA>::back()
+DATA const& Vector<DATA>::back()
 {
     return _array[_size - 1];
 }
 
 // Return the current number of elements stored in the Vector
 template<typename DATA>
-size_t Vector<DATA>::size()
+size_t const& Vector<DATA>::size()
 {
     return _size;
 }
+
+template<typename DATA>
+size_t const& Vector<DATA>::capacity()
+{
+    return _capacity;
+}
+
 /*====================================================================================================================*/
 /* END OF ACCESSORS                                                                                                   */
 /*====================================================================================================================*/
@@ -152,9 +194,11 @@ void Vector<DATA>::_resize()
     for(auto index = 0; index < _size; index++)
         tempArr[index] = _array[index];
 
-
     // Reassign the class array to pointer to the new array's address
     _array = tempArr;
+
+    // Update the capacity
+    _capacity *= 2;
 }
 
 /*====================================================================================================================*/
