@@ -10,6 +10,7 @@
 *
 * ===========$HISTORY=============
 * Ean McGilvery     01/28/2021
+* Justin Stitt      01/29/2021
 **************************************************************************************************/
 
 // INCLUDE GUARDS (You may also see, #pragma once)
@@ -46,7 +47,7 @@ class Vector
         DATA const& back();
         size_t const& size();
         size_t const& capacity();
-
+	bool const& empty();
         // Used for testing purposes
         void displayVector();
 
@@ -344,6 +345,21 @@ template<typename DATA>
 size_t const& Vector<DATA>::capacity()
 {
     return _capacity;
+}
+
+/*************************************************************************** 
+ * Function: empty
+ * Description:
+ *      Returns whether or not the vector is empty
+ * Parameters:
+ *      None
+ * Return:
+ *      bool : true = vector is empty, false = vector is not empty 
+***************************************************************************/
+template<typename DATA>
+bool const& Vector<DATA>::empty()
+{
+    return (_size > 0 ? false : true);
 }
 
 /*====================================================================================================================*/
