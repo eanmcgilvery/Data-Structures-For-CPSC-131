@@ -46,7 +46,7 @@ class Vector
         DATA const& back();
         size_t const& size();
         size_t const& capacity();
-		bool const& empty();
+	bool const& empty();
         // Used for testing purposes
         void displayVector();
 
@@ -358,7 +358,7 @@ size_t const& Vector<DATA>::capacity()
 template<typename DATA>
 bool const& Vector<DATA>::empty()
 {
-	return (_size > 0 ? false : true);
+    return (_size > 0 ? false : true);
 }
 
 /*====================================================================================================================*/
