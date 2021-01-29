@@ -354,7 +354,7 @@ size_t const& Vector<DATA>::capacity()
  * Parameters:
  *      None
  * Return:
- *      bool : true = vectory is empty, false = vector is not empty 
+ *      bool : true = vector is empty, false = vector is not empty 
 ***************************************************************************/
 template<typename DATA>
 bool const& Vector<DATA>::empty()
