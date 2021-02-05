@@ -2,15 +2,15 @@
 * File: Vector.hpp
 * Description:
 *       Basic Vector implementation for CPSC 131 SI @ CSUF.
-*       Requires C++ 11 or later (Smart Pointers)
+*       Requires C++ 14 or later (Smart Pointers)
 *       (If using clang or g++ compiler specify with the flag: -std=c++17)
 *
 *       For the STL implementation, refer to the following:
 *       Link: http://cplusplus.com/reference/vector/vector/
 *
-* ===========$HISTORY=============
-* Ean McGilvery     01/28/2021
-* Justin Stitt      01/29/2021
+* ===========================================$HISTORY$============================================
+* Ean McGilvery     01/28/2021   Inital Commit
+* Justin Stitt      01/29/2021   Added empty() function 
 **************************************************************************************************/
 
 // INCLUDE GUARDS (You may also see, #pragma once)
@@ -47,7 +47,7 @@ class Vector
         DATA const& back();
         size_t const& size();
         size_t const& capacity();
-	bool const& empty();
+        bool const& empty();
         // Used for testing purposes
         void displayVector();
 
