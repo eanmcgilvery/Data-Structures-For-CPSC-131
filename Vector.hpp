@@ -53,14 +53,14 @@ class Vector
 
     private:
         // Main Container
-        std::unique_ptr<DATA[]> _array; 
+        std::unique_ptr<DATA[]> array_; 
 
         // Used to keep track of contents
-        size_t _capacity;
-        size_t _size;
+        size_t capacity_;
+        size_t size_;
 
         // Called when expanding Vector
-        void _resize();
+        void resize();
 };
 
 
@@ -91,8 +91,8 @@ class Vector
  *      None 
 ***************************************************************************/
 template <typename DATA>
-Vector<DATA>::Vector(int userDefinedCapacity) : _capacity(userDefinedCapacity), _array(new DATA[userDefinedCapacity]),
-                                                    _size(0) {}
+Vector<DATA>::Vector(int userDefinedCapacity) : capacity_(userDefinedCapacity), array_(new DATA[userDefinedCapacity]),
+                                                    size_(0) {}
 /*************************************************************************** 
  * Function: Vector
  * Description:
@@ -121,13 +121,13 @@ template<typename DATA>
 Vector<DATA>::Vector(const Vector &objectToCopy)
 {
     // Copy each member variable over into the new object that's being
-    _capacity = objectToCopy._capacity;
-    _size = objectToCopy._size;
-    _array = std::unique_ptr<DATA>(new DATA[_capacity]); // Note we need to create space
+    capacity_ = objectToCopy.capacity_;
+    size_ = objectToCopy.size_;
+    array_ = std::unique_ptr<DATA>(new DATA[capacity_]); // Note we need to create space
 
     // Copy each element into their respective space
-    for(int index = 0; index < _size; index++)
-        _array[index] = objectToCopy._array[index];
+    for(int index = 0; index < size_; index++)
+        array_[index] = objectToCopy.array_[index];
 }
 
 /*************************************************************************** 
@@ -160,15 +160,15 @@ template <typename DATA>
 void Vector<DATA>::operator=(const Vector<DATA>& objectToCopy)
 {
     // Copy each member variable over into the new object that's being
-    _capacity = objectToCopy._capacity;
-    _size = objectToCopy._size;
-    _array.reset(new DATA[_capacity]);
+    capacity_ = objectToCopy.capacity_;
+    size_ = objectToCopy.size_;
+    array_.reset(new DATA[capacity_]);
 
     
     // Copy each element into their respective space
-    for(auto index = 0; index < _size; index++)
+    for(auto index = 0; index < size_; index++)
     {
-        _array[index] = objectToCopy._array[index];
+        array_[index] = objectToCopy.array_[index];
     }
 }
 /*====================================================================================================================*/
@@ -196,12 +196,12 @@ void Vector<DATA>::push_back(DATA inputData)
     // Check to see that if we add another element that we have space
     // In this implementation, we double the capacity only if we try to add to an
     // already full Vector.
-    if(_size == _capacity)
-        _resize();
+    if(size_ == capacity_)
+        resize();
 
     // Add new element and, incriment our size variable
-    _array[_size] = inputData;
-    _size++;
+    array_[size_] = inputData;
+    size_++;
 }
 
 /*************************************************************************** 
@@ -220,24 +220,24 @@ template <typename DATA>
 void Vector<DATA>::insertAt(size_t index, DATA inputData)
 {
     // Check to see if the index is valid
-    if(index < _capacity - 1 && index > 0)
+    if(index < capacity_ - 1 && index > 0)
     {
         // Resize the Vector if necessary
-        if(_size == _capacity)
-            _resize();
+        if(size_ == capacity_)
+            resize();
 
         // Push the contents of the Vector back to make space
-        for(auto i = _size + 1; i > index; i--)
-            _array[i] = _array[i - 1];
+        for(auto i = size_ + 1; i > index; i--)
+            array_[i] = array_[i - 1];
         
         // Finally, insert the value at the desired index
-        _array[index] = inputData;
+        array_[index] = inputData;
     }
     else
         throw std::out_of_range("Not a valid Index to Insert.");
     
     // Update counter
-    _size++;
+    size_++;
 }
 
 
@@ -254,7 +254,7 @@ template<typename DATA>
 void Vector<DATA>::pop_back()
 {
     // Remove back element in Vector
-    _size--;
+    size_--;
 }
 
 /*************************************************************************** 
@@ -270,11 +270,11 @@ template<typename DATA>
 void Vector<DATA>::clear()
 {
     // Call the reset method to release the old memory, and allocate new memory
-     _array.reset(new DATA[10]);
+     array_.reset(new DATA[10]);
 
      // Reset the counter variables
-     _capacity = 10;
-     _size = 0;
+     capacity_ = 10;
+     size_ = 0;
 }
 /*====================================================================================================================*/
 /* END OF MODIFIERS                                                                                                   */
@@ -299,7 +299,7 @@ void Vector<DATA>::clear()
 template<typename DATA>
 DATA const& Vector<DATA>::front()
 {
-    return _array[0];
+    return array_[0];
 }
 
 /*************************************************************************** 
@@ -314,7 +314,7 @@ DATA const& Vector<DATA>::front()
 template<typename DATA>
 DATA const& Vector<DATA>::back()
 {
-    return _array[_size - 1];
+    return array_[size_ - 1];
 }
 
 /*************************************************************************** 
@@ -329,7 +329,7 @@ DATA const& Vector<DATA>::back()
 template<typename DATA>
 size_t const& Vector<DATA>::size()
 {
-    return _size;
+    return size_;
 }
 
 /*************************************************************************** 
@@ -344,7 +344,7 @@ size_t const& Vector<DATA>::size()
 template<typename DATA>
 size_t const& Vector<DATA>::capacity()
 {
-    return _capacity;
+    return capacity_;
 }
 
 /*************************************************************************** 
@@ -359,7 +359,7 @@ size_t const& Vector<DATA>::capacity()
 template<typename DATA>
 bool const& Vector<DATA>::empty()
 {
-    return (_size > 0 ? false : true);
+    return (size_ > 0 ? false : true);
 }
 
 /*====================================================================================================================*/
@@ -374,7 +374,7 @@ bool const& Vector<DATA>::empty()
 /*====================================================================================================================*/
 
 /*************************************************************************** 
- * Function: _resize
+ * Function: resize
  * Description:
  *      Creates a temporary vector with double the capacity of the original,
  *      and then copies the contents over.
@@ -384,20 +384,20 @@ bool const& Vector<DATA>::empty()
  *      None
 ***************************************************************************/
 template <typename DATA>
-void Vector<DATA>::_resize()
+void Vector<DATA>::resize()
 {
     // create a temporary Array that's double the capacity
-    std::unique_ptr<DATA[]> tempArr (new DATA[_capacity * 2]);
+    std::unique_ptr<DATA[]> tempArr (new DATA[capacity_ * 2]);
 
     // Load the temporary array with what we have now
-    for(auto index = 0; index < _size; index++)
-        tempArr[index] = _array[index];
+    for(auto index = 0; index < size_; index++)
+        tempArr[index] = array_[index];
 
     // Reassign the class array to pointer to the new array's address
-    _array = std::move(tempArr);
+    array_ = std::move(tempArr);
 
     // Update the capacity
-    _capacity *= 2;
+    capacity_ *= 2;
 }
 
 /*====================================================================================================================*/
@@ -423,8 +423,8 @@ void Vector<DATA>::_resize()
 template<typename DATA>
 void Vector<DATA>::displayVector()
 {
-    for(auto index = 0; index < _size; index++)
-        std::cout << _array[index] << " ";
+    for(auto index = 0; index < size_; index++)
+        std::cout << array_[index] << " ";
 
     std::cout << std::endl;
 }
