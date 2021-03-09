@@ -13,7 +13,9 @@
 * Justin Stitt      02/16/2021   Refactored unique ptrs, constructor, 
                                  pop_front, push_front, insert_after, 
                                  remove_after, size, print
-*
+* Ean McGilvery     03/08/2021   Added overloaded insert_after, remove_after, destuctor, clear.
+*                                   Refactored previous functions to use sentinel nodes.
+* Janeen Yamak      03/08/2021   Added reversingLinkedList.
 **************************************************************************************************/
 
 // INCLUDE GUARDS (You may also see, #pragma once)
@@ -22,6 +24,7 @@
 
 #include <memory>
 #include <iostream>
+#include <stdexcept>
 
 template <typename DATA>
 struct Node
@@ -29,8 +32,7 @@ struct Node
     DATA data; // Element in the Node
     std::shared_ptr<Node<DATA>> next; // Pointer to the next Node in the list
 
-    Node() = delete; // We don't want the user to Create a Node without providing a value; Compiler
-                     // will throw an error if we try to invoke this
+    Node() = default;
     Node(DATA element) : data(element), next(nullptr) {}
 };
 
@@ -50,20 +52,30 @@ class SLL
         // Mutators
         void push_front(DATA);
         void pop_front();
-        void insert_after(DATA, int);
+        void insert_after(DATA, int); // Insert After Given an "Index"
+        void insert_after(DATA, std::shared_ptr<Node<DATA>>); // Insert After given a Pointer
         void remove();  // to-do
         void remove_after(int);
-        void clear();   // to-do
+        void remove_after(std::shared_ptr<Node<DATA>>);
+        void clear();   
+        
 
         // Accessors
         DATA front();   // to-do
         DATA back();    // to-do
         size_t size();
         void print();
+        std::shared_ptr<Node<DATA>> search(DATA);
+        
+        // Fun Functions!  :)
+        void reverse();
 
     private:
         std::shared_ptr<Node<DATA>> head_; // Keep tabs on first node of the list
         std::shared_ptr<Node<DATA>> tail_; // Keep tabs on the last node of the list
+
+        // Mutators
+        void clear(std::shared_ptr<Node<DATA>>); // Helper to Clear
 
         size_t size_; // Size of our list
 };
@@ -87,14 +99,18 @@ class SLL
 /*************************************************************************** 
  * Function: SLL
  * Description:
- *      An overloaded constructor that creates a new SLL with a null head and tail
+ *      An overloaded constructor that creates a new SLL with Sentinel Nodes
  * Parameters:
  *      None
  * Return:
  *      None 
 ***************************************************************************/
 template <typename DATA>
-SLL<DATA>::SLL() : size_(0), head_(nullptr), tail_(nullptr){}// initialization list
+SLL<DATA>::SLL() : head_(new Node<DATA>()), tail_(new Node<DATA>()), size_(0) 
+{
+    // Create an empty list (using Sentinel Nodes)
+    head_->next = tail_;
+}
 
 /*************************************************************************** 
  * Function: ~SLL
@@ -109,7 +125,7 @@ SLL<DATA>::SLL() : size_(0), head_(nullptr), tail_(nullptr){}// initialization l
 template <typename DATA>
 SLL<DATA>::~SLL()
 { 
-    // nothing to do here!
+    clear();
 }
 
 
@@ -160,27 +176,23 @@ void SLL<DATA>::operator=(const SLL<DATA>& objectToCopy)
  * Description:
  *      Pushes an element into the front of the singly linked list.  
  * Parameters:
- *      DATA inputData : The desired element to be placed into the singly linked list
+ *      DATA element : The desired element to be placed into the singly linked list
  * Return:
  *      None 
 ***************************************************************************/
 template <typename DATA>
-void SLL<DATA>::push_front(DATA d)
+void SLL<DATA>::push_front(DATA element)
 {
     // Dynamically create the new node
-    std::shared_ptr<Node<DATA>> to_add = std::make_shared<Node<DATA>>(d);
+    std::shared_ptr<Node<DATA>> to_add(new Node<DATA> (element));
 
-    // If the SLL is empty, to_add is now our head
-    if(this->size_ == 0){
-        this->head_ = to_add;
-    }
-    else{
-        // Reassign 'to_add's next ptr to point to head
-        to_add->next = this->head_;
-        // Redefine head as our new node
-        this->head_ = to_add;
-    } 
-    ++this->size_;// increment size
+    // Reassign 'to_add's next ptr to point to head
+    to_add->next = head_->next;
+    
+    // Redefine head as our new node
+    head_->next = to_add;
+    
+    size_++;// increment size
 }
 
 /*************************************************************************** 
@@ -188,8 +200,8 @@ void SLL<DATA>::push_front(DATA d)
  * Description:
  *      Pushes an element into the front of the singly linked list.  
  * Parameters:
- *      DATA inputData : The desired element to be placed into the singly linked list
- *      int idx     : The index to insert after. (0:size_-1)
+ *      DATA d  : The desired element to be placed into the singly linked list
+ *      int idx : The index to insert after. (0 : size_-1)
  * Return:
  *      None 
 ***************************************************************************/
@@ -197,31 +209,86 @@ template <typename DATA>
 void SLL<DATA>::insert_after(DATA d, int idx)
 {
     if(idx < -1 || idx > static_cast<int>(this->size_-1)){
-        throw std::out_of_range("index out of bounds!");
+        throw std::out_of_range("ERROR: index out of bounds!");
+    }
+
+    // special case if intent is to add to the front
+    if(idx == -1)
+    {
+        this->push_front(d);
+        return;
     }
 
     // Node we want to add
     std::shared_ptr<Node<DATA>> to_add = std::make_shared<Node<DATA>>(d);
-    // temp pointer used for iteration
-    std::shared_ptr<Node<DATA>> tmp = this->head_;
+
+    // temp pointer used for iteration. Begins at first node.
+    std::shared_ptr<Node<DATA>> tmp = head_->next;
 
     // Step through the SLL 'idx' times
-    while(idx > 0){
+    while(idx > 0)
+    {
         tmp = tmp->next;
-        --idx;
+        idx--;
     }
-    
-    if(idx == -1){// special case if intent is to add to the front
-        this->push_front(d);
-        return;
-    }
+
     // rearrange pointers
     to_add->next = tmp->next;
     tmp->next = to_add;
 
     // increment size
-    ++this->size_;
+   size_++;
 }
+
+/*************************************************************************** 
+ * Function: insert_after
+ * Description:
+ *      Inserts an element into a list after a given node within the list.  
+ * Parameters:
+ *      DATA inputData : The desired element to be placed into the singly linked list
+ *      std::shared_ptr<Node<DATA>> position   : The index to insert after.
+ * Return:  
+ *      None 
+***************************************************************************/
+template <typename DATA>
+void SLL<DATA>::insert_after(DATA element, std::shared_ptr<Node<DATA>> position)
+{
+    // Bounds checking! Make sure the 
+    if(!position || position == this->tail_)
+        throw std::out_of_range("INVALID POSITION GIVEN!");
+
+    // Encapsualte the ele into a Node
+    std::shared_ptr<Node<DATA>> nodeToInsert(new Node<DATA>(element)); 
+
+    // Attach our new node to hold onto the list, before we detach 'position'
+    nodeToInsert->next = position->next;
+
+    // Have 'position' point to the new Node
+    position->next = nodeToInsert;
+
+    // Update the Size of our linked list
+    size_++; 
+}
+
+/*************************************************************************** 
+ * Function: remove_after
+ * Description:
+ *      Removes in a list at a given place within the list.  
+ * Parameters:
+ *      DATA inputData : The desired element to be placed into the singly linked list
+ *      std::shared_ptr<Node<DATA>> position   : The index to insert after. (0:size_-1)
+ * Return:  
+ *      None 
+***************************************************************************/
+template <typename DATA>
+void SLL<DATA>::remove_after(std::shared_ptr<Node<DATA>> position)
+{
+    if(position == head_ || position == tail_ || !position)
+        return;
+
+    position->next = position->next->next;
+}
+
 
 /*************************************************************************** 
  * Function: pop_front
@@ -236,10 +303,10 @@ template <typename DATA>
 void SLL<DATA>::pop_front()
 {
     // cannot remove from an empty list!
-    if(this->size_ <= 0) return;
+    if(size_ <= 0) return;
 
     // progress head pointer to its neighbour, use reset to remove old head
-    this->head_ = this->head_->next;
+    head_->next = head_->next->next;
 
     /*
         Notice here that although the 'old' head has zero pointers pointing to it
@@ -247,7 +314,7 @@ void SLL<DATA>::pop_front()
         (btw, this is what makes smart pointers 'smart')
     */
 
-   --this->size_;// lastly, decrement size
+   size_--; // lastly, decrement size
 }
 
 /*************************************************************************** 
@@ -284,6 +351,58 @@ void SLL<DATA>::remove_after(int idx)
     --this->size_;// decrement size
 }
 
+/*************************************************************************** 
+ * Function: clear
+ * Description:
+ *      Removes all the nodes within a linked list, leaving only the sentinel 
+ *          nodes. This is the user facing wrapper.
+ * Parameters:
+ *      None
+ * Return:
+ *      None 
+***************************************************************************/
+template <typename DATA>
+void SLL<DATA>::clear()
+{
+    // Pass in the first Node in the list
+    clear(head_->next); 
+
+    /*
+    *  Note! We could also have iteratively used pop_front to clear!
+    *  We implemented this way to get some good ol' recursion practice in. 
+    */
+}
+
+/*************************************************************************** 
+ * Function: clear
+ * Description:
+ *      Removes all the nodes within a linked list, leaving only the sentinel 
+ *          nodes. 
+ * Parameters:
+ *      std::shared_ptr<Node<DATA>> position : the node in which to begin removal.
+ * Return:
+ *      None 
+***************************************************************************/
+template <typename DATA>
+void SLL<DATA>::clear(std::shared_ptr<Node<DATA>> position)
+{
+    // Base Case: Check to see if list is empty or at the end of the list
+    if (position == tail_ || size_ == 0)
+        return;
+    
+    // Recursive call, till we get to the last node
+    clear(position->next);
+
+    /*
+    * Break the chain to the node we're pointing at. The Smart pointers will
+    * clean up the allocated memory and wipe the node. 
+    */
+    position->next = nullptr;
+
+    // Update the size;
+    size_--;
+}
+
 /*====================================================================================================================*/
 /* END OF MODIFIERS                                                                                                   */
 /*====================================================================================================================*/
@@ -310,18 +429,21 @@ void SLL<DATA>::print()
     std::cout << "\n";// formatting
 
     // tmp pointer used for iteration
-    std::shared_ptr<Node<DATA>> tmp = this->head_;
-    while(tmp != nullptr){
-        std::cout << tmp->data << " ";
+    std::shared_ptr<Node<DATA>> tmp(head_->next);
+
+    std::cout << "[HEAD]-> ";
+    while(tmp != tail_)
+    {
+        std::cout << tmp->data << "-> ";
         tmp = tmp->next;
     }
-    std::cout << "\n";// formatting
+    std::cout << "[TAIL]-> nullptr\n";
 }
 
 /*************************************************************************** 
  * Function: size
  * Description:
- *      Returns the size of the singly linked list
+ *      Returns the size of the Singly linked list
  * Parameters:
  *      None
  * Return:
@@ -330,7 +452,7 @@ void SLL<DATA>::print()
 template <typename DATA>
 size_t SLL<DATA>::size()
 {
-    return this->size_;
+    return size_;
 }
 
 /*====================================================================================================================*/
@@ -338,6 +460,76 @@ size_t SLL<DATA>::size()
 /*====================================================================================================================*/
 
 
+/*************************************************************************** 
+ * Function: search
+ * Description:
+ *      Looks for the given element in the list, and returns a pointer to the location
+ * Parameters:
+ *      DATA element : the element to try to find in the list.
+ * Return:
+ *      std::shared_ptr<Node<DATA>> : pointer to the postion of the ele in the list. 
+ *                                      nullptr if the element is not found.
+***************************************************************************/
+template <typename DATA>
+std::shared_ptr<Node<DATA>> SLL<DATA>::search(DATA element) 
+{
+    // Create a pointer to move through the list. Start at the first element.
+    std::shared_ptr<Node<DATA>> position(head_->next);
 
+    // Step through each element until position reachs the end of the list.
+    while(position != tail_)
+    {
+        // Look to see if we found the desired data.
+        if(position->data == element)
+            return position;
+
+        position = position->next;
+    }
+    return nullptr;
+}
+
+/*====================================================================================================================*/
+/* FUN FUNCTIONS                                                                                                      */
+/*====================================================================================================================*/
+
+/*************************************************************************** 
+ * Function: reverse
+ * Description:
+ *      Reverses the contents of a Linked List! 
+ * Parameters:
+ *      none 
+ * Return:
+ *      none 
+***************************************************************************/
+template <typename DATA>
+void SLL<DATA>::reverse()
+{
+    // Nothing to Reverse!
+    if(size_ <= 1)
+        return;
+    
+    // Create three pointers, initially at the first three elements in the list
+    std::shared_ptr<Node<DATA>> p1 = head_->next;
+    std::shared_ptr<Node<DATA>> p2 = p1->next;
+    std::shared_ptr<Node<DATA>> p3 = p2->next;
+
+
+    p1->next = tail_;
+    
+    while(p3!=tail_)
+    {
+        p2->next = p1;
+
+        p1 = p2;
+        p2 = p3;
+        p3 = p3->next;
+    }
+
+    p2->next = p1;
+    head_->next = p2;
+}
+
+/*====================================================================================================================*/
+/* END OF FUN FUNCTIONS                                                                                               */
+/*====================================================================================================================*/
 #endif
-
