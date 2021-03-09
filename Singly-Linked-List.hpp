@@ -208,22 +208,15 @@ void SLL<DATA>::push_front(DATA element)
 template <typename DATA>
 void SLL<DATA>::insert_after(DATA d, int idx)
 {
-    if(idx < -1 || idx > static_cast<int>(this->size_-1)){
+    if(idx < 0 || idx > static_cast<int>(this->size_-1)){
         throw std::out_of_range("ERROR: index out of bounds!");
-    }
-
-    // special case if intent is to add to the front
-    if(idx == -1)
-    {
-        this->push_front(d);
-        return;
     }
 
     // Node we want to add
     std::shared_ptr<Node<DATA>> to_add = std::make_shared<Node<DATA>>(d);
 
     // temp pointer used for iteration. Begins at first node.
-    std::shared_ptr<Node<DATA>> tmp = head_->next;
+    std::shared_ptr<Node<DATA>> tmp(head_);
 
     // Step through the SLL 'idx' times
     while(idx > 0)
@@ -329,22 +322,20 @@ void SLL<DATA>::pop_front()
 template <typename DATA>
 void SLL<DATA>::remove_after(int idx)
 {
-    if(idx < -1 || idx >= static_cast<int>(this->size_-1)){
-        throw std::out_of_range("out of bounds!");
-    }
+    if(idx < 0 || idx >= static_cast<int>(this->size_-1))
+        throw std::out_of_range("ERROR: index out of bounds!");
+
 
     // temp pointer used for iteration
-    std::shared_ptr<Node<DATA>> tmp = this->head_;
+    std::shared_ptr<Node<DATA>> tmp(head_);
 
     // iterate through the SLL 'idx' times
-    while(idx > 0){
+    while(idx > 0)
+    {
         tmp = tmp->next;
         --idx;
     }
-    if(idx == -1){// special case if removing front
-        this->pop_front();
-        return;
-    }
+    
     // jump past tmp's neighbour, effectively removing it
     tmp->next = tmp->next->next; // note that next->next may be null here (if idx == size_-1)
     
