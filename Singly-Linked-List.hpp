@@ -156,9 +156,24 @@ SLL<DATA>::SLL(const SLL &objectToCopy)
  *      None 
 ***************************************************************************/
 template <typename DATA>
-void SLL<DATA>::operator=(const SLL<DATA>& objectToCopy)
+void SLL<DATA>::operator=(const SLL<DATA>& rhs)
 {
-    // to-do ...
+    // Empty out this linked list before copying over right-hand side list
+    this->clear();
+
+    // Pointer to the source and destination
+    auto src = rhs.head_, dst = this->head_;
+
+    for(; src->next != rhs.tail_; src = src->next, dst = dst->next, ++this->size_){
+        // copy old data
+        DATA old = src->next->data;
+        // allocate new memory based off old data
+        std::shared_ptr<Node<DATA>> to_add(new Node<DATA>(old));
+        // place this new node into 'this' list
+        dst->next = to_add;
+        to_add->next = this->tail_;
+    }
+
 }
 
 /*====================================================================================================================*/
@@ -230,7 +245,7 @@ void SLL<DATA>::insert_after(DATA d, int idx)
     tmp->next = to_add;
 
     // increment size
-   size_++;
+    size_++;
 }
 
 /*************************************************************************** 
