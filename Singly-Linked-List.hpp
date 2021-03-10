@@ -16,6 +16,7 @@
 * Ean McGilvery     03/08/2021   Added overloaded insert_after, remove_after, destuctor, clear.
 *                                   Refactored previous functions to use sentinel nodes.
 * Janeen Yamak      03/08/2021   Added reverse.
+* Justin Stitt      03/09/2021   Added operator=
 **************************************************************************************************/
 
 // INCLUDE GUARDS (You may also see, #pragma once)
