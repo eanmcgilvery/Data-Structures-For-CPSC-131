@@ -1,5 +1,6 @@
 #include "Singly-Linked-List.hpp"
 #include "Vector.hpp"
+#include "Binary-Search-Tree.hpp"
 #include <ctime> // time(...)
 
 /*
@@ -42,6 +43,13 @@ int main(int argc, char** argv)
     myList.print();
 
     #endif // SLL_TEST
+
+    #ifdef BST_TEST
+    
+    BST<int, char> myTree;
+    std::cout << "\nInit okay\n";
+
+    #endif // BST_TEST
     
     return 0;
 }
