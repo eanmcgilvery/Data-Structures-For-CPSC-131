@@ -17,6 +17,7 @@
 *                                   Refactored previous functions to use sentinel nodes.
 * Janeen Yamak      03/08/2021   Added reverse.
 * Justin Stitt      03/09/2021   Added operator=
+* Justin Stitt      04/30/2021   Added front(), back(), copy constructor
 **************************************************************************************************/
 
 // INCLUDE GUARDS (You may also see, #pragma once)
@@ -44,11 +45,11 @@ class SLL
         // Default Constructor
         SLL();
         // Destructor
-        ~SLL();         // to-do
+        ~SLL();
         // Copy Constructor
-        SLL(const SLL& objectToCopy); // to-do
+        SLL(const SLL& objectToCopy);
         // Copy Assignment Operator
-        void operator=(const SLL& objectToCopy); // to-do
+        void operator=(const SLL& objectToCopy);
 
         // Mutators
         void push_front(DATA);
@@ -62,8 +63,8 @@ class SLL
         
 
         // Accessors
-        DATA front();   // to-do
-        DATA back();    // to-do
+        DATA front();
+        DATA back();
         size_t size();
         void print();
         std::shared_ptr<Node<DATA>> search(DATA);
@@ -141,9 +142,9 @@ SLL<DATA>::~SLL()
  *      None 
 ***************************************************************************/
 template<typename DATA>
-SLL<DATA>::SLL(const SLL &objectToCopy)
+SLL<DATA>::SLL(const SLL& objectToCopy)
 {
-    // to-do ...
+    this = objectToCopy;
 }
 
 /*************************************************************************** 
@@ -232,7 +233,7 @@ void SLL<DATA>::insert_after(DATA d, int idx)
     std::shared_ptr<Node<DATA>> to_add = std::make_shared<Node<DATA>>(d);
 
     // temp pointer used for iteration. Begins at first node.
-    std::shared_ptr<Node<DATA>> tmp(head_);
+    std::shared_ptr<Node<DATA>> tmp(head_->next);
 
     // Step through the SLL 'idx' times
     while(idx > 0)
@@ -419,6 +420,40 @@ void SLL<DATA>::clear(std::shared_ptr<Node<DATA>> position)
 /*====================================================================================================================*/
 /* ACCESSORS                                                                                                          */
 /*====================================================================================================================*/
+
+/*************************************************************************** 
+ * Function: front
+ * Description:
+ *      Returns the front element of the sinlgy linked list.
+ * Parameters:
+ *      None
+ * Return:
+ *      Element of type DATA at the front of the list 
+***************************************************************************/
+template <typename DATA>
+DATA SLL<DATA>::front(){
+    if(!this->size()){
+        throw std::out_of_range("ERROR: cannot access the front of empty Queue");
+    }
+    return this->head_->next->data;
+}
+
+/*************************************************************************** 
+ * Function: back
+ * Description:
+ *      Returns the back element of the sinlgy linked list.
+ * Parameters:
+ *      None
+ * Return:
+ *      Element of type DATA at the back of the list 
+***************************************************************************/
+template <typename DATA>
+DATA SLL<DATA>::back(){
+    if(!this->size()){
+        throw std::out_of_range("ERROR: cannot access the back of empty Queue");
+    }
+    return this->tail_->data;
+}
 
 /*************************************************************************** 
  * Function: print
