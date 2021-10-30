@@ -11,6 +11,7 @@
 * ===========================================$HISTORY$============================================
 * Ean McGilvery     01/28/2021   Inital Commit
 * Justin Stitt      01/29/2021   Added empty() function 
+* Ean McGilvery     10/30/2021   Added MCSTOR and Move operator=
 **************************************************************************************************/
 
 // INCLUDE GUARDS (You may also see, #pragma once)
@@ -20,6 +21,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <memory>
+#include <utility>
 
 template<typename DATA>
 class Vector
@@ -33,8 +35,12 @@ class Vector
         ~Vector();
         // Copy Constructor
         Vector(const Vector & objectToCopy);
+        // Move Constructor
+        Vector(Vector&& objectToMove) noexcept;
         // Copy Assignment Operator
-        void operator=(const Vector &objectToCopy);
+        Vector<DATA>& operator=(const Vector &objectToCopy);
+        // Move Assignment Operator
+        Vector<DATA>& operator=(Vector&& objectToMove) noexcept;
 
         // Mutators
         void push_back(DATA data);
@@ -47,7 +53,7 @@ class Vector
         DATA const& back();
         size_t const& size();
         size_t const& capacity();
-        bool const& empty();
+        bool empty();
         // Used for testing purposes
         void displayVector();
 
@@ -91,10 +97,10 @@ class Vector
  *      None 
 ***************************************************************************/
 template <typename DATA>
-Vector<DATA>::Vector(int userDefinedCapacity) : capacity_(userDefinedCapacity), array_(new DATA[userDefinedCapacity]),
-                                                    size_(0) {}
+Vector<DATA>::Vector(int userDefinedCapacity) : 
+array_(new DATA[userDefinedCapacity]), capacity_(userDefinedCapacity), size_(0) {}
 /*************************************************************************** 
- * Function: Vector
+ * Function: Vector (Default Constructor)
  * Description:
  *      The default constructor that creates a new Vector with a capacity 
  *      of 10.
@@ -107,7 +113,7 @@ template <typename DATA>
 Vector<DATA>::Vector() : Vector(10) {}
 
 /*************************************************************************** 
- * Function: Vector
+ * Function: Vector (Copy Constructor)
  * Description:
  *      An overloaded constructor (AKA the copy constructor) that copys the 
  *      contents of a Vector that is already defined, into a new Vector 
@@ -118,16 +124,39 @@ Vector<DATA>::Vector() : Vector(10) {}
  *      None 
 ***************************************************************************/
 template<typename DATA>
-Vector<DATA>::Vector(const Vector &objectToCopy)
-{
-    // Copy each member variable over into the new object that's being
-    capacity_ = objectToCopy.capacity_;
-    size_ = objectToCopy.size_;
-    array_ = std::unique_ptr<DATA>(new DATA[capacity_]); // Note we need to create space
+Vector<DATA>::Vector(const Vector &objectToCopy) : 
 
+array_(std::make_unique<DATA[]>(capacity_)), size_(objectToCopy.size_), capacity_(objectToCopy.capacity_)
+{
+    std::cout << "CSTOR was called...\n";
     // Copy each element into their respective space
     for(int index = 0; index < size_; index++)
         array_[index] = objectToCopy.array_[index];
+}
+
+/*************************************************************************** 
+ * Function: Vector (Move Constructor)
+ * Description:
+ *      An overloaded constructor that moves the 
+ *      contents of a Vector that is already defined, into a new Vector 
+ *      object. The old Vector is reset to a default state.
+ * Parameters:
+ *      Vector&& objectToMove : Vector to move contents from
+ * Return:
+ *      None 
+***************************************************************************/
+template<typename DATA>
+Vector<DATA>::Vector(Vector&& objectToMove) noexcept :
+
+array_   (std::move(objectToMove.array_)), 
+capacity_(std::move(objectToMove.capacity_)),
+size_    (std::move(objectToMove.size_))
+{
+    std::cout << "Move CSTOR Called...\n";
+    // Set Old Vec to valid state
+    objectToMove.capacity_ = 10;
+    objectToMove.array_ = std::make_unique<DATA[]>(objectToMove.capacity_);
+    objectToMove.size_ = 0;
 }
 
 /*************************************************************************** 
@@ -157,19 +186,35 @@ Vector<DATA>::~Vector()
  *      None 
 ***************************************************************************/
 template <typename DATA>
-void Vector<DATA>::operator=(const Vector<DATA>& objectToCopy)
+Vector<DATA>& Vector<DATA>::operator=(const Vector<DATA>& objectToCopy)
 {
+    std::cout << "Copy Assign Op Called...\n";
     // Copy each member variable over into the new object that's being
     capacity_ = objectToCopy.capacity_;
     size_ = objectToCopy.size_;
     array_.reset(new DATA[capacity_]);
 
-    
     // Copy each element into their respective space
     for(auto index = 0; index < size_; index++)
     {
         array_[index] = objectToCopy.array_[index];
     }
+
+    return *this;
+}
+
+template <typename DATA>
+Vector<DATA>& Vector<DATA>::operator=(Vector&& objectToMove) noexcept
+{ 
+    std::cout << "Move Assign Op Called...\n";
+    if(&objectToMove != this)
+    {
+        this->array_    = std::move(objectToMove.array_);
+        this->capacity_ = std::move(objectToMove.capacity_);
+        this->size_     = std::move(objectToMove.size_);
+    }
+
+    return *this;   
 }
 /*====================================================================================================================*/
 /* END OF CONSTRUCTORS, DESTRUCTOR AND COPY ASSIGNMENT OPERATOR                                                       */
@@ -357,9 +402,9 @@ size_t const& Vector<DATA>::capacity()
  *      bool : true = vector is empty, false = vector is not empty 
 ***************************************************************************/
 template<typename DATA>
-bool const& Vector<DATA>::empty()
+bool Vector<DATA>::empty()
 {
-    return (size_ > 0 ? false : true);
+    return (size_ > 0) ? false : true;
 }
 
 /*====================================================================================================================*/
